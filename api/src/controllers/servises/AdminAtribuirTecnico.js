@@ -5,7 +5,7 @@ import { ObjectId } from "mongodb";
 import fetch from "node-fetch";
 import { sendTecnicoAssignmentConfirmationEmail } from "../../../utils/EmailServices.js";
 
-const ASSIGNMENT_WEBHOOK_URL = process.env.ASSIGNMENT_WEBHOOK_URL || "https://yamamotto-dev.app.n8n.cloud/webhook/Conclusão";
+const ASSIGNMENT_WEBHOOK_URL = process.env.ASSIGNMENT_WEBHOOK_URL || "https://yamamotto-dev.app.n8n.cloud/webhook/Conclusao";
 
 const schema = yup.object().shape({
     tecnico_id: yup.mixed().required("tecnico_id é obrigatório"),
@@ -371,6 +371,26 @@ export const adminAtribuirTecnico = async (req, res) => {
 
         const webhookResult = await sendAtribuicaoWebhook(webhookPayload);
 
+        if (!webhookResult.ok) {
+            logStructured("error", "admin_atribuir_tecnico_webhook_blocked", {
+                serviceId: id,
+                webhookUrl: ASSIGNMENT_WEBHOOK_URL,
+                error: webhookResult.error,
+            });
+
+            return res.status(502).json({
+                success: false,
+                message: "Técnico atribuído, mas não foi possível notificar o n8n. Verifique se o workflow está ativo e tente novamente.",
+                service: serializeService(updatedService, id),
+                tecnico_utilizado: tecnicoNome,
+                webhook: {
+                    sent: false,
+                    url: ASSIGNMENT_WEBHOOK_URL,
+                    error: webhookResult.error || null,
+                },
+            });
+        }
+
         if (requester.email) {
             await sendTecnicoAssignmentConfirmationEmail(requester.email, {
                 assignedByName: requester.nome,
@@ -396,30 +416,17 @@ export const adminAtribuirTecnico = async (req, res) => {
             numeroPedido: String(numeroPedido),
             tecnico: tecnicoNome,
             automacaoDesativada: !ordemDeServico,
-            webhookSent: webhookResult.ok,
+            webhookSent: true,
         });
 
         return res.status(200).json({
             success: true,
-            message: ordemDeServico
-                ? "Técnico atribuído e ordem de serviço gerada com sucesso!"
-                : "Técnico atribuído com sucesso! (automação desativada)",
+            message: "Técnico atribuído com sucesso!",
             service: serializeService(updatedService, id),
             tecnico_utilizado: tecnicoNome,
-            automacao: ordemDeServico
-                ? {
-                    desativada: false,
-                    ordemDeServico,
-                    motivo: null,
-                }
-                : {
-                    desativada: true,
-                    motivo: "Automação do Bling desativada nesta rota.",
-                },
             webhook: {
-                sent: webhookResult.ok,
+                sent: true,
                 url: ASSIGNMENT_WEBHOOK_URL,
-                error: webhookResult.error || null,
             },
         });
     } catch (error) {
