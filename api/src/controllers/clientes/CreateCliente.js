@@ -3,6 +3,9 @@ import chalk from "chalk";
 import { getDb } from "../../db.js";
 
 function normalizeClientePayload(body) {
+    if (Array.isArray(body)) {
+        body = body[0];
+    }
     if (!body || typeof body !== 'object') {
         return {};
     }
@@ -14,8 +17,15 @@ function normalizeClientePayload(body) {
         telefone: body.telefone,
         celular: body.celular || body.telefone,
         email: body.email || null,
-        bling_pedido_id: body.bling_pedido_id || null,
-        cpf: body.cpf,
+        bling_pedido_id: body.bling_pedido_id ? String(body.bling_pedido_id) : null,
+        
+        cpf: body.cpf || body.ie || "",
+        ie: body.ie || null,
+        tipo: body.tipo || null,
+
+        forma_pagamento: body.forma_pagamento || null,
+        descricao_pagamento: body.descricao_pagamento || null,
+
         rua: body.rua || endereco.rua || null,
         numero: body.numero || endereco.numero,
         complemento: body.complemento || endereco.complemento || null,
@@ -28,18 +38,28 @@ function normalizeClientePayload(body) {
 
 export const createCliente = async (req, res) => {
     const clienteData = normalizeClientePayload(req.body);
-
     // Validar se body foi recebido
-    if (!req.body || Object.keys(req.body).length === 0) {
-        return res.status(400).json({ 
-            error: "Body da requisição é obrigatório e não pode estar vazio." 
-        });
-    }
+if (
+    !req.body ||
+    (Array.isArray(req.body) && req.body.length === 0) ||
+    (!Array.isArray(req.body) && Object.keys(req.body).length === 0)
+) {
+    return res.status(400).json({ 
+        error: "Body da requisição é obrigatório e não pode estar vazio." 
+    });
+}
 
     const schema = yup.object().shape({
         nome: yup.string().required(),
         telefone: yup.string().required(),
+        
         cpf: yup.string().required(),
+        ie: yup.string().nullable(true).optional(),
+        tipo: yup.string().nullable(true).optional(),
+
+        forma_pagamento: yup.string().nullable(true).optional(),
+        descricao_pagamento: yup.string().nullable(true).optional(),
+
         numero: yup.string().required(),
         complemento: yup.string().nullable(true).optional(),
         bairro: yup.string().required(),
@@ -58,21 +78,26 @@ export const createCliente = async (req, res) => {
         return res.status(400).json({ error: error.errors });
     }
 
-    const {
-        nome,
-        telefone,
-        cpf,
-        numero,
-        complemento,
-        bairro,
-        cidade,
-        estado,
-        cep,
-        celular,
-        email,
-        bling_pedido_id,
-        rua,
-    } = clienteData;
+const {
+    nome,
+    telefone,
+    cpf,
+    ie,
+    tipo,
+    forma_pagamento,
+    descricao_pagamento,
+    numero,
+    complemento,
+    bairro,
+    cidade,
+    estado,
+    cep,
+    celular,
+    email,
+    bling_pedido_id,
+    rua,
+} = clienteData;
+
 
     try {
         const db = await getDb();
@@ -89,7 +114,13 @@ export const createCliente = async (req, res) => {
             celular,
             email,
             bling_pedido_id,
+
             cpf,
+            ie,
+            tipo,
+            forma_pagamento,
+            descricao_pagamento,
+            
             rua,
             numero,
             complemento: complemento || null,
