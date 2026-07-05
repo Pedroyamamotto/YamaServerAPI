@@ -1,6 +1,7 @@
-import multer from "multer";
+import multerPkg from "multer";
+const multer = multerPkg.default || multerPkg;
 
-export const MAX_SERVICE_PHOTOS = 2;
+export const MAX_SERVICE_PHOTOS = 5;
 export const MAX_SERVICE_PHOTO_SIZE_BYTES = 10 * 1024 * 1024;
 export const MAX_SERVICE_CONTEXT_PHOTOS = 5;
 export const ALLOWED_SERVICE_PHOTO_MIME_TYPES = new Set([
@@ -72,7 +73,7 @@ const getUploadErrorResponse = (error) => {
 		if (error.code === "LIMIT_FILE_COUNT" || error.code === "LIMIT_UNEXPECTED_FILE") {
 			return {
 				status: 400,
-				body: { message: "É permitido enviar no máximo 2 imagens no campo foto." },
+				body: { message: `É permitido enviar no máximo ${MAX_SERVICE_PHOTOS} imagens no campo foto.` },
 			};
 		}
 	}

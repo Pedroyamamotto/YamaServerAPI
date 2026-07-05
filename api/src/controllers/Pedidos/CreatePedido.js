@@ -1,5 +1,5 @@
 import yup from "yup";
-import chalk from "chalk";
+import chalk from "../../chalk-stub.js";
 import { getDb } from "../../db.js";
 
 export const createPedido = async (req, res) => {

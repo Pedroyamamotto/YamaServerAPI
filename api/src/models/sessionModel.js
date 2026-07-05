@@ -1,5 +1,6 @@
 // filepath: d:\Projeto de Aulas\api Mongo\api\models\sessionModel.js
-import { ObjectId } from "mongodb";
+import mongodb from "mongodb";
+const { ObjectId  } = mongodb;
 import mongoose from "mongoose";
 
 // Define the session schema

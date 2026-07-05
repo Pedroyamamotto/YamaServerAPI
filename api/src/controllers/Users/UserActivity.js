@@ -1,6 +1,7 @@
 import { getDb } from "../../db.js";
-import { ObjectId } from "mongodb";
-import chalk from "chalk";
+import mongodb from "mongodb";
+const { ObjectId  } = mongodb;
+import chalk from "../../chalk-stub.js";
 
 // Function to log user activity
 export async function logUserActivity(req, res) {

@@ -1,4 +1,5 @@
-import { ObjectId } from "mongodb";
+import mongodb from "mongodb";
+const { ObjectId  } = mongodb;
 
 export const USER_ACTIVITY_COLLECTION = "userActivities";
 

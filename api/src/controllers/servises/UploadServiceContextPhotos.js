@@ -1,4 +1,5 @@
-import { ObjectId } from "mongodb";
+import mongodb from "mongodb";
+const { ObjectId  } = mongodb;
 import { getDb } from "../../db.js";
 import { saveServiceContextPhotos, openServiceContextPhotoDownload, openServicePhotoDownload, extractGridFsFileIdFromUrl } from "../../services/servicePhotoStorage.js";
 

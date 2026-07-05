@@ -1,6 +1,6 @@
 import { getDb } from "../../db.js";
 import yup from "yup";
-import chalk from "chalk";
+import chalk from "../../chalk-stub.js";
 import bcrypt from "bcrypt";
 
 // Validação do schema de login

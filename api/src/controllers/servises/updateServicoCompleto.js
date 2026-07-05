@@ -1,17 +1,14 @@
 import { getDb } from "../../db.js";
-import { ObjectId } from "mongodb";
+import mongodb from "mongodb";
+const { ObjectId } = mongodb;
 import { updateCliente as updateClienteController } from "../clientes/UpdateCliente.js";
 
 /**
  * Atualiza dados do serviço e do cliente em uma única rota
- * Espera no body:
- * {
- *   descricao_servico, status, data_agendada, hora_agendada, observacoes,
- *   cliente_id, nome_cliente, telefone_cliente, endereco_completo
- * }
+ * Suporta busca por _id (ObjectId) ou pedido_id (string)
  */
 export const updateServicoCompleto = async (req, res) => {
-    const { id } = req.params; // pedido_id
+    const { id } = req.params;
     let {
         descricao_servico,
         status,
@@ -24,6 +21,8 @@ export const updateServicoCompleto = async (req, res) => {
         endereco_completo,
         nomeAntigo,
         nomeNovo,
+        tecnico_id,
+        tecnico,
         ...rest
     } = req.body;
 
@@ -31,22 +30,28 @@ export const updateServicoCompleto = async (req, res) => {
         const db = await getDb();
         const servicosCollection = db.collection("servicos");
 
-        // Se cliente_id não veio, buscar pelo nomeAntigo (caso fornecido)
+        // Determina query: busca por _id (ObjectId) primeiro, depois por pedido_id (string)
+        let servicoQuery = { pedido_id: String(id) };
+        if (ObjectId.isValid(id) && String(id).length === 24) {
+            const byObjectId = await servicosCollection.findOne({ _id: new ObjectId(id) });
+            if (byObjectId) {
+                servicoQuery = { _id: new ObjectId(id) };
+            }
+        }
+
+        // Se cliente_id não veio, buscar pelo nomeAntigo ou pelo próprio serviço
         if (!cliente_id || typeof cliente_id !== 'string' || !ObjectId.isValid(cliente_id)) {
-            const db = await getDb();
             const clientesCollection = db.collection("clientes");
             let clienteDoc = null;
             if (nomeAntigo && typeof nomeAntigo === 'string' && nomeAntigo.trim() !== '') {
-                // Busca insensível a case e ignorando espaços extras
                 const nomeAntigoRegex = new RegExp(`^${nomeAntigo.trim().replace(/\s+/g, ' ').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
                 clienteDoc = await clientesCollection.findOne({ nome: nomeAntigoRegex });
             } else {
-                // fallback: buscar pelo serviço
-                const servicoDoc = await servicosCollection.findOne({ pedido_id: String(id) });
-                if (servicoDoc && (servicoDoc.cliente_id || (servicoDoc.cliente && (servicoDoc.cliente._id || servicoDoc.cliente.id || servicoDoc.cliente.$oid)))) {
+                const servicoDoc = await servicosCollection.findOne(servicoQuery);
+                if (servicoDoc && (servicoDoc.cliente_id || (servicoDoc.cliente && (servicoDoc.cliente._id || servicoDoc.cliente.id)))) {
                     cliente_id = String(
                         servicoDoc.cliente_id ||
-                        (servicoDoc.cliente && (servicoDoc.cliente._id || servicoDoc.cliente.id || servicoDoc.cliente.$oid)) ||
+                        (servicoDoc.cliente && (servicoDoc.cliente._id || servicoDoc.cliente.id)) ||
                         ''
                     );
                 }
@@ -56,26 +61,27 @@ export const updateServicoCompleto = async (req, res) => {
             }
         }
 
-        // Atualiza serviço
+        // Monta objeto de atualização do serviço
         const updateServico = {};
         if (descricao_servico !== undefined) updateServico.descricao_servico = descricao_servico;
-        // Se status não vier, mas concluido_em vier, marca como concluido
         if (status !== undefined) {
             updateServico.status = status;
-        } else if (req.body.concluido_em || req.body.finalizado || req.body.status === undefined) {
+        } else if (req.body.concluido_em || req.body.finalizado) {
             updateServico.status = "concluido";
         }
         if (data_agendada !== undefined && data_agendada !== "") updateServico.data_agendada = new Date(data_agendada);
         if (hora_agendada !== undefined) updateServico.hora_agendada = hora_agendada;
         if (observacoes !== undefined) updateServico.observacoes = observacoes;
+        if (tecnico_id !== undefined) updateServico.tecnico_id = tecnico_id;
+        if (tecnico !== undefined) updateServico.tecnico = tecnico;
         updateServico.updated_at = new Date();
 
         const servicoResult = await servicosCollection.updateOne(
-            { pedido_id: String(id) },
+            servicoQuery,
             { $set: updateServico }
         );
 
-        // Atualiza cliente usando o controller padrão, se cliente_id válido
+        // Atualiza cliente se cliente_id válido
         let clienteResult = null;
         if (
             cliente_id &&
@@ -83,41 +89,25 @@ export const updateServicoCompleto = async (req, res) => {
             cliente_id.trim() !== '' &&
             ObjectId.isValid(cliente_id)
         ) {
-            // Busca o cliente atual para garantir que o nome bate com nomeAntigo (se fornecido)
-            const db = await getDb();
             const clientesCollection = db.collection("clientes");
             const clienteAtual = await clientesCollection.findOne({ _id: new ObjectId(cliente_id) });
             if (nomeAntigo && clienteAtual && clienteAtual.nome !== nomeAntigo.trim()) {
                 return res.status(400).json({ error: "Nome antigo não confere com o cliente encontrado." });
             }
-            // Permitir atualização só do nome
             const clienteBody = {};
-            if (nomeNovo && nomeNovo.trim() !== '') {
-                clienteBody.nome = nomeNovo.trim();
-            }
-            // Permitir update mesmo se só nomeNovo vier
+            if (nomeNovo && nomeNovo.trim() !== '') clienteBody.nome = nomeNovo.trim();
             if (telefone_cliente && telefone_cliente.trim() !== '') clienteBody.telefone = telefone_cliente;
             if (endereco_completo && endereco_completo.trim() !== '') clienteBody.endereco = endereco_completo;
             for (const [k, v] of Object.entries(rest)) {
                 if (typeof v === 'string' && v.trim() === '') continue;
                 if (v !== undefined && v !== null) clienteBody[k] = v;
             }
-            // Só faz update se pelo menos nomeNovo vier
             if (Object.keys(clienteBody).length > 0) {
-                const fakeReq = {
-                    params: { id: cliente_id },
-                    body: clienteBody
-                };
+                const fakeReq = { params: { id: cliente_id }, body: clienteBody };
                 let fakeResData = {};
                 const fakeRes = {
-                    status: (code) => {
-                        fakeResData.status = code;
-                        return fakeRes;
-                    },
-                    json: (data) => {
-                        fakeResData.data = data;
-                        return fakeResData;
-                    }
+                    status: (code) => { fakeResData.status = code; return fakeRes; },
+                    json: (data) => { fakeResData.data = data; return fakeResData; }
                 };
                 await updateClienteController(fakeReq, fakeRes);
                 clienteResult = fakeResData;

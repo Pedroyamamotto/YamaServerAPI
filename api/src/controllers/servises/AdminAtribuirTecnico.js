@@ -1,8 +1,9 @@
 import yup from "yup";
-import chalk from "chalk";
+import chalk from "../../chalk-stub.js";
 import { getDb } from "../../db.js";
-import { ObjectId } from "mongodb";
-import fetch from "node-fetch";
+import mongodb from "mongodb";
+const { ObjectId  } = mongodb;
+
 import { sendTecnicoAssignmentConfirmationEmail } from "../../../utils/EmailServices.js";
 
 const ASSIGNMENT_WEBHOOK_URL = process.env.ASSIGNMENT_WEBHOOK_URL || "https://yamamotto-dev.app.n8n.cloud/webhook/Conclusao";

@@ -60,6 +60,7 @@ export const updateService = async (req, res) => {
         concluido_em: yup.date(),
         nao_realizado_motivo: yup.string(),
         motivo_nao_realizacao: yup.string(),
+        motivo_sem_comprovante: yup.string(),
         assinatura: yup.string(),
         assinatura_url: yup.string(),
     });
@@ -135,6 +136,16 @@ export const updateService = async (req, res) => {
                 }
             }
             updateData.concluido_em = new Date();
+            
+            // Calcula o tempo trabalhado final se o serviço estiver iniciado e adiciona ao tempo total
+            let tempo_trabalhado_ms = existingService.tempo_trabalhado_ms || 0;
+            if (existingService.iniciado_em) {
+                const iniciado = new Date(existingService.iniciado_em);
+                const agora = new Date();
+                tempo_trabalhado_ms += (agora.getTime() - iniciado.getTime());
+            }
+            updateData.tempo_trabalhado_ms = tempo_trabalhado_ms;
+            updateData.iniciado_em = null; // Zera iniciado_em ao concluir
         }
 
         if (updateData.status === "nao_realizado" && !updateData.nao_realizado_motivo) {

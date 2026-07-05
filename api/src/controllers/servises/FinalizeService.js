@@ -1,6 +1,7 @@
 import yup from "yup";
-import chalk from "chalk";
-import { ObjectId } from "mongodb";
+import chalk from "../../chalk-stub.js";
+import mongodb from "mongodb";
+const { ObjectId  } = mongodb;
 import { getDb } from "../../db.js";
 
 export const finalizeService = async (req, res) => {

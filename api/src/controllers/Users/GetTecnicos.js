@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import chalk from "../../chalk-stub.js";
 import { getDb } from "../../db.js";
 
 export const getTecnicos = async (req, res) => {

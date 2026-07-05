@@ -1,7 +1,8 @@
 // filepath: d:\Projeto de Aulas\api Mongo\api\controllers\users\Delete.js
-import { ObjectId } from "mongodb";
+import mongodb from "mongodb";
+const { ObjectId  } = mongodb;
 import { getDb } from "../../db.js"; 
-import chalk from "chalk";
+import chalk from "../../chalk-stub.js";
 
 export async function deleteUser(req, res) {
     const { id } = req.params;

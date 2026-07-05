@@ -7,7 +7,7 @@ import apiRedirect from "../routes/index.js";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import { StatusCodes } from "http-status-codes";
-import chalk from "chalk";
+import chalk from "../chalk-stub.js";
 import session from "express-session";
 import MongoStore from "connect-mongo";
 import { getDb } from "../db.js";
@@ -36,6 +36,7 @@ getDb().then(db => {
 
 // Busca as Rotas
 app.use("/api/v1", apiRedirect);
+app.use("/api", apiRedirect); // alias sem /v1 para compatibilidade com o app mobile
 app.use("/pages", express.static(path.resolve("./public/pages")));
 app.use("/assets", express.static(path.resolve("./public/assets")));
 
@@ -58,7 +59,7 @@ const opotions = {
 }
 
 const specs = swaggerJsdoc(opotions);
-app.use("/api", swaggerUi.serve, swaggerUi.setup(specs));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
 // erro 404 - rota não encontrada
     app.use((req, res) => {

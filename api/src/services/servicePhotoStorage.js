@@ -1,6 +1,7 @@
-import { GridFSBucket, ObjectId } from "mongodb";
+import mongodb from "mongodb";
+const { GridFSBucket, ObjectId  } = mongodb;
 import { getDb } from "../db.js";
-import fetch from "node-fetch";
+
 import FormData from "form-data";
 
 const SERVICE_PHOTO_BUCKET_NAME = "servicePhotos";

@@ -1,6 +1,7 @@
 import { getDb } from "../../db.js";
-import { ObjectId } from "mongodb";
-import chalk from "chalk";
+import mongodb from "mongodb";
+const { ObjectId  } = mongodb;
+import chalk from "../../chalk-stub.js";
 
 async function logoutUser(req, res) {
     const { id } = req.params;

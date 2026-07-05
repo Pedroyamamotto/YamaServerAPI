@@ -1,7 +1,8 @@
 // Script para atualizar a senha de um usuário no MongoDB via Node.js
 // Uso: node updatePassword.js <email> <novaSenha>
 
-import { MongoClient } from 'mongodb';
+import mongodb from "mongodb";
+const { MongoClient  } = mongodb;
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 

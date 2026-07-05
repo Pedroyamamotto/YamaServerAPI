@@ -1,7 +1,7 @@
 // filepath: api-mongo/api/controllers/users/ResetPassword.js
 import { getDb } from "../../db.js";
 import bcrypt from "bcrypt";
-import chalk from "chalk";
+import chalk from "../../chalk-stub.js";
 
 async function ResetPassWord(req, res) {
     const { email, code, newPassword } = req.body;

@@ -1,4 +1,8 @@
-import { openServicePhotoDownload } from "../../services/servicePhotoStorage.js";
+import mongodb from "mongodb";
+const { ObjectId  } = mongodb;
+import { getDb } from "../../db.js";
+import { openServicePhotoDownload, saveServicePhotos } from "../../services/servicePhotoStorage.js";
+
 // GET /api/admin/services/comprovante/:id => retorna a imagem do comprovante
 export const getComprovantePagamentoImage = async (req, res) => {
     const { id } = req.params;
@@ -37,9 +41,6 @@ export const getComprovantePagamentoImage = async (req, res) => {
         return res.status(500).json({ message: "Erro ao buscar comprovante", detail: error.message });
     }
 };
-import { ObjectId } from "mongodb";
-import { getDb } from "../../db.js";
-import { saveServicePhotos } from "../../services/servicePhotoStorage.js";
 
 // Upload de comprovante de pagamento (imagem)
 export const uploadComprovantePagamento = async (req, res) => {
@@ -62,9 +63,14 @@ export const uploadComprovantePagamento = async (req, res) => {
         // Salva referência no serviço
         await servicosCollection.updateOne(
             { _id: new ObjectId(id) },
-            { $set: { comprovante_pagamento: uploaded[0] } }
+            { 
+                $set: { 
+                    comprovante_pagamento: uploaded[0],
+                    comprovantes_pagamento: uploaded
+                } 
+            }
         );
-        return res.status(200).json({ success: true, comprovante: uploaded[0] });
+        return res.status(200).json({ success: true, comprovante: uploaded[0], comprovantes: uploaded });
     } catch (error) {
         return res.status(500).json({ message: "Erro ao salvar comprovante", detail: error.message });
     }
@@ -83,7 +89,7 @@ export const getComprovantePagamento = async (req, res) => {
         if (!service || !service.comprovante_pagamento) {
             return res.status(404).json({ message: "Comprovante não encontrado" });
         }
-        return res.status(200).json({ comprovante: service.comprovante_pagamento });
+        return res.status(200).json({ comprovante: service.comprovante_pagamento, comprovantes: service.comprovantes_pagamento || [service.comprovante_pagamento] });
     } catch (error) {
         return res.status(500).json({ message: "Erro ao buscar comprovante", detail: error.message });
     }

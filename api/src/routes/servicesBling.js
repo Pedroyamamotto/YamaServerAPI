@@ -1,5 +1,6 @@
 import express from "express";
-import { ObjectId } from "mongodb";
+import mongodb from "mongodb";
+const { ObjectId  } = mongodb;
 import { getDb } from "../db.js";
 import { spawn } from "child_process";
 import { existsSync } from "node:fs";

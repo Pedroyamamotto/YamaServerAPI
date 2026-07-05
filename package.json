@@ -32,7 +32,7 @@
     "http-status-codes": "^2.3.0",
     "mongodb": "^7.1.0",
     "morgan": "^1.10.1",
-    "multer": "^2.1.1",
+    "multer": "^2.2.0",
     "node-fetch": "^3.3.2",
     "nodemailer": "^8.0.1",
     "playwright": "^1.58.2",

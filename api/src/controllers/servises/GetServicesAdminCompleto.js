@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import chalk from "../../chalk-stub.js";
 import { getDb } from "../../db.js";
 
 const getChecklistFromLegacyDoc = (legacyChecklist) => {
@@ -99,6 +99,7 @@ export const getServicesAdminCompleto = async (req, res) => {
                 assinatura_url: assinaturaUrl,
                 motivo_nao_realizacao:
                     service.motivo_nao_realizacao || service.nao_realizado_motivo || null,
+                has_comprovante: !!(service.comprovante_pagamento && service.comprovante_pagamento.fileId),
             };
         });
 

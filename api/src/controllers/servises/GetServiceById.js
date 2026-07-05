@@ -1,6 +1,7 @@
-import chalk from "chalk";
+import chalk from "../../chalk-stub.js";
 import { getDb } from "../../db.js";
-import { ObjectId } from "mongodb";
+import mongodb from "mongodb";
+const { ObjectId } = mongodb;
 
 const normalizePhotoUrls = (service) => {
     if (Array.isArray(service?.fotos_urls) && service.fotos_urls.length > 0) {
@@ -36,6 +37,7 @@ export const getServiceById = async (req, res) => {
     try {
         const db = await getDb();
         const servicosCollection = db.collection("servicos");
+        const usuariosCollection = db.collection("usuários");
 
         const service = await servicosCollection.findOne({ _id: new ObjectId(id) });
 
@@ -43,16 +45,36 @@ export const getServiceById = async (req, res) => {
             return res.status(404).json({ error: "Serviço não encontrado" });
         }
 
+        let tecnicoNome = null;
+        if (service.tecnico_id) {
+            try {
+                const tecUser = await usuariosCollection.findOne({ 
+                    $or: [
+                        { _id: new ObjectId(String(service.tecnico_id)) },
+                        { id: String(service.tecnico_id) }
+                    ]
+                });
+                if (tecUser) {
+                    tecnicoNome = tecUser.nome;
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
+
         const fotosContexto = normalizeContextPhotos(service);
         const serviceFormatted = {
             ...service,
             id: service._id?.toString(),
+            tecnico: tecnicoNome,
+            nome_tecnico: tecnicoNome,
             numero_pedido: service.numero_pedido ?? null,
             foto_url: service.foto_url ?? normalizePhotoUrls(service)[0] ?? null,
             fotos_urls: normalizePhotoUrls(service),
             fotos_contexto: fotosContexto,
             fotos_porta_cliente_urls: fotosContexto.porta_cliente.map((item) => item?.url).filter(Boolean),
             fotos_instalacoes_urls: fotosContexto.instalacoes.map((item) => item?.url).filter(Boolean),
+            has_comprovante: !!(service.comprovante_pagamento && service.comprovante_pagamento.fileId),
         };
 
         console.log(chalk.blue(`Sistema 💻 : Serviço encontrado: ${id} 🔍`));

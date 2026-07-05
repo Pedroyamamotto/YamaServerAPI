@@ -1,5 +1,6 @@
 import "dotenv/config";
-import { MongoClient } from "mongodb";
+import mongodb from "mongodb";
+const { MongoClient  } = mongodb;
 
 let cachedClient = null;
 let cachedDb = null;

@@ -5,7 +5,7 @@ import morgan from "morgan";
 import path from "node:path";
 import apiRedirect from "./routes/index.js";
 import { StatusCodes } from "http-status-codes";
-import chalk from "chalk";
+import chalk from "../chalk-stub.js";
 
 const server = express();
 

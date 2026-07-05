@@ -1,4 +1,5 @@
-import { ObjectId } from "mongodb";
+import mongodb from "mongodb";
+const { ObjectId  } = mongodb;
 import { getDb } from "../../db.js";
 import { deleteServicePhotos, deleteServiceContextPhotos } from "../../services/servicePhotoStorage.js";
 

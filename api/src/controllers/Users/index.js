@@ -8,3 +8,5 @@ export * from "./Verify.js";
 export * from "./ResendVerificationCode.js";
 export * from "./RestPassword.js";
 export * from "./UserActivity.js";
+export * from "./GetGerentes.js";
+export * from "./UpdateUser.js";

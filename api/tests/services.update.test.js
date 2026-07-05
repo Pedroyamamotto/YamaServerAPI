@@ -1,6 +1,7 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { Readable } from "node:stream";
-import { ObjectId } from "mongodb";
+import mongodb from "mongodb";
+const { ObjectId  } = mongodb;
 import request from "supertest";
 import { createApp } from "../index.js";
 import { resetDbForTests, setDbForTests } from "../src/db.js";

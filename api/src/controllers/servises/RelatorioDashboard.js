@@ -19,7 +19,7 @@ export const relatorioDashboard = async (req, res) => {
                 ])
                 .toArray(),
             servicosCollection.distinct("tecnico_id", {
-                status: { $in: ["aguardando", "atribuido"] },
+                status: { $in: ["aguardando", "atribuido", "iniciado", "pausado"] },
                 tecnico_id: { $exists: true, $ne: null },
             }),
         ]);
@@ -31,7 +31,7 @@ export const relatorioDashboard = async (req, res) => {
 
         // Padronização dos status
         const aguardando = countMap["aguardando"] || 0;
-        const atribuidos = countMap["atribuido"] || 0;
+        const atribuidos = (countMap["atribuido"] || 0) + (countMap["agendado"] || 0) + (countMap["iniciado"] || 0) + (countMap["pausado"] || 0);
         const concluidos = countMap["concluido"] || 0;
         const naoRealizados = countMap["nao_realizado"] || 0;
         // Busca o total real de serviços no banco
@@ -50,15 +50,18 @@ export const relatorioDashboard = async (req, res) => {
                         $sum: { $cond: [{ $eq: ["$status", "concluido"] }, 1, 0] }
                     },
                     ativos: {
-                        $sum: { $cond: [{ $in: ["$status", ["aguardando", "atribuido"]] }, 1, 0] }
+                        $sum: { $cond: [{ $in: ["$status", ["aguardando", "atribuido", "iniciado", "pausado"]] }, 1, 0] }
                     },
-                    total_tecnico: { $sum: 1 }
+                    total_tecnico: { $sum: 1 },
+                    tempo_total_ms: {
+                        $sum: { $cond: [{ $eq: ["$status", "concluido"] }, { $ifNull: ["$tempo_trabalhado_ms", 0] }, 0] }
+                    }
                 }
             }
         ]).toArray();
 
         // Buscar dados dos técnicos na tabela usuários
-        const usuarios = await usuariosCollection.find({ typeUser: "tecnico" }).toArray();
+        const usuarios = await usuariosCollection.find({ typeUser: { $in: ["tecnico", "gerente"] } }).toArray();
         const usuarioMap = new Map(usuarios.map(u => [String(u._id), u]));
 
         // Montar array final, incluindo técnicos sem cadastro
@@ -66,12 +69,15 @@ export const relatorioDashboard = async (req, res) => {
             .filter(item => String(item._id).trim() !== "")
             .map(item => {
                 const user = usuarioMap.get(String(item._id));
+                const tempo_medio_ms = item.concluidos > 0 ? Math.round(item.tempo_total_ms / item.concluidos) : 0;
                 return {
                     _id: item._id,
                     nome: user ? user.nome : "Desconhecido",
                     concluidos: item.concluidos,
                     ativos: item.ativos,
                     total_tecnico: item.total_tecnico,
+                    tempo_total_ms: item.tempo_total_ms || 0,
+                    tempo_medio_ms: tempo_medio_ms,
                     motivo: user ? undefined : "Técnico não cadastrado na tabela usuários"
                 };
             });
@@ -85,6 +91,8 @@ export const relatorioDashboard = async (req, res) => {
                     concluidos: 0,
                     ativos: 0,
                     total_tecnico: 0,
+                    tempo_total_ms: 0,
+                    tempo_medio_ms: 0,
                     motivo: "Técnico cadastrado, mas sem serviços registrados"
                 });
             }

@@ -1,5 +1,5 @@
 import yup from "yup";
-import chalk from "chalk";
+import chalk from "../../chalk-stub.js";
 import { getDb } from "../../db.js";
 
 function normalizeClientePayload(body) {
@@ -22,10 +22,6 @@ function normalizeClientePayload(body) {
         cpf: body.cpf || body.ie || "",
         ie: body.ie || null,
         tipo: body.tipo || null,
-
-        forma_pagamento: body.forma_pagamento || null,
-        descricao_pagamento: body.descricao_pagamento || null,
-
         rua: body.rua || endereco.rua || null,
         numero: body.numero || endereco.numero,
         complemento: body.complemento || endereco.complemento || null,
@@ -57,8 +53,8 @@ if (
         ie: yup.string().nullable(true).optional(),
         tipo: yup.string().nullable(true).optional(),
 
-        forma_pagamento: yup.string().nullable(true).optional(),
-        descricao_pagamento: yup.string().nullable(true).optional(),
+        
+        
 
         numero: yup.string().required(),
         complemento: yup.string().nullable(true).optional(),
@@ -84,8 +80,6 @@ const {
     cpf,
     ie,
     tipo,
-    forma_pagamento,
-    descricao_pagamento,
     numero,
     complemento,
     bairro,
@@ -118,8 +112,6 @@ const {
             cpf,
             ie,
             tipo,
-            forma_pagamento,
-            descricao_pagamento,
             
             rua,
             numero,

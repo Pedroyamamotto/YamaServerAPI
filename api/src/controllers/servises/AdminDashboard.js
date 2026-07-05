@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import chalk from "../../chalk-stub.js";
 import { getDb } from "../../db.js";
 
 export const adminDashboard = async (req, res) => {
@@ -23,7 +23,7 @@ export const adminDashboard = async (req, res) => {
             // Técnicos com serviços em aberto (aguardando | atribuido)
             servicosCollection
                 .distinct("tecnico_id", {
-                    status: { $in: ["aguardando", "atribuido"] },
+                    status: { $in: ["aguardando", "atribuido", "iniciado", "pausado"] },
                     tecnico_id: { $exists: true, $ne: null },
                 }),
         ]);
@@ -35,7 +35,7 @@ export const adminDashboard = async (req, res) => {
         }
 
         const aguardando = countMap["aguardando"] || 0;
-        const atribuidos = countMap["atribuido"] || countMap["agendado"] || 0;
+        const atribuidos = (countMap["atribuido"] || 0) + (countMap["agendado"] || 0) + (countMap["iniciado"] || 0) + (countMap["pausado"] || 0);
         const concluidos = countMap["concluido"] || 0;
         const naoRealizados = countMap["nao_realizado"] || 0;
         const total = Object.values(countMap).reduce((sum, v) => sum + v, 0);
@@ -65,7 +65,7 @@ export const adminDashboard = async (req, res) => {
                                     {
                                         $in: [
                                             "$status",
-                                            ["aguardando", "atribuido", "agendado", "em_andamento", "pendente"],
+                                            ["aguardando", "atribuido", "agendado", "em_andamento", "pendente", "iniciado", "pausado"],
                                         ],
                                     },
                                     1,

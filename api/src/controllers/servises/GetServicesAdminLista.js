@@ -161,11 +161,15 @@ export const getServicesAdminLista = async (req, res) => {
                 numeroPedido: service.numero_pedido || '',
                 pedidoId: service.pedido_id || '',
                 numeroOrdemServico: service.ordem_de_servico || '',
+                tempoTrabalhadoMs: service.tempo_trabalhado_ms || 0,
+                iniciadoEm: service.iniciado_em || null,
                 motivo: service.motivo_nao_realizacao || service.nao_realizado_motivo || '',
                 fotoUri: service.foto_url || fotosUrls[0] || '',
                 fotosContextoUris: [...fotosPortaCliente, ...fotosInstalacoes].map(f => f?.url).filter(Boolean),
                 assinaturaUri: service.assinatura_url || '',
                 assinadoPor: service.assinado_por || '',
+                has_comprovante: !!(service.comprovante_pagamento && service.comprovante_pagamento.fileId),
+                motivoSemComprovante: service.motivo_sem_comprovante || '',
                 checklist: Array.isArray(service.checklist) ? service.checklist.map(item => {
                     if (typeof item === 'object' && item !== null) {
                         return {

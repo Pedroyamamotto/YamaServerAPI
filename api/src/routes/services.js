@@ -40,9 +40,11 @@ import {
 import { uploadComprovantePagamento, getComprovantePagamento } from "../controllers/servises/ComprovantePagamento.js";
 import { removeServicePhoto, desconcluirService } from "../controllers/servises/AdminServiceActions.js";
 import { updateServicoCompleto } from "../controllers/servises/updateServicoCompleto.js";
+import { iniciarService } from "../controllers/servises/IniciarService.js";
+import { pausarService } from "../controllers/servises/PausarService.js";
 
-// Multer para upload de comprovante (1 imagem)
-const comprovanteUpload = multer({ storage: multer.memoryStorage(), limits: { files: 1, fileSize: 10 * 1024 * 1024 } });
+// Multer para upload de comprovante (até 5 imagens)
+const comprovanteUpload = multer({ storage: multer.memoryStorage(), limits: { files: 5, fileSize: 10 * 1024 * 1024 } });
 
 /**
  * @swagger
@@ -149,7 +151,7 @@ router.post(
 router.post(
     "/admin/services/:id/comprovante",
     requireAdmin,
-    comprovanteUpload.array("comprovante", 1),
+    comprovanteUpload.array("comprovante", 5),
     uploadComprovantePagamento
 );
 
@@ -218,7 +220,7 @@ router.get(
  *           description: Data agendada para o serviço
  *         status:
  *           type: string
- *           enum: [aguardando, atribuido, concluido, nao_realizado]
+ *           enum: [aguardando, atribuido, iniciado, pausado, concluido, nao_realizado]
  *           description: Status do serviço
  *         observacoes:
  *           type: string
@@ -292,7 +294,7 @@ router.post("/services", createService);
  *         name: status
  *         schema:
  *           type: string
- *           enum: [aguardando, atribuido, concluido, nao_realizado]
+ *           enum: [aguardando, atribuido, iniciado, pausado, concluido, nao_realizado]
  *         description: Filtrar por status
  *       - in: query
  *         name: tecnicoId
@@ -348,7 +350,7 @@ router.get("/services", getServices);
  *         name: status
  *         schema:
  *           type: string
- *           enum: [aguardando, atribuido, concluido, nao_realizado]
+ *           enum: [aguardando, atribuido, iniciado, pausado, concluido, nao_realizado]
  *       - in: query
  *         name: tecnico_id
  *         schema:
@@ -380,7 +382,7 @@ router.get("/services/admin/completo", getServicesAdminCompleto);
  *         name: status
  *         schema:
  *           type: string
- *           enum: [aguardando, atribuido, concluido, nao_realizado]
+ *           enum: [aguardando, atribuido, iniciado, pausado, concluido, nao_realizado]
  *         description: Filtrar por status
  *       - in: query
  *         name: tecnico_id
@@ -434,7 +436,7 @@ router.get("/services/admin/completo", getServicesAdminCompleto);
  *                         type: string
  *                       status:
  *                         type: string
- *                         enum: [aguardando, atribuido, concluido, nao_realizado]
+ *                         enum: [aguardando, atribuido, iniciado, pausado, concluido, nao_realizado]
  *                       nome_cliente:
  *                         type: string
  *                       telefone_cliente:
@@ -487,7 +489,7 @@ router.get("/admin/services", requireAdmin, getServicesAdminLista);
  *         name: status
  *         schema:
  *           type: string
- *           enum: [aguardando, atribuido, concluido, nao_realizado]
+ *           enum: [aguardando, atribuido, iniciado, pausado, concluido, nao_realizado]
  *       - in: query
  *         name: tecnico_id
  *         schema:
@@ -824,7 +826,7 @@ router.get("/services/:id/fotos", getServiceAllPhotos);
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [aguardando, atribuido, concluido, nao_realizado]
+ *                 enum: [aguardando, atribuido, iniciado, pausado, concluido, nao_realizado]
  *               checklist:
  *                 oneOf:
  *                   - type: string
@@ -1142,5 +1144,9 @@ router.patch("/services/:id/checkin", checkinService);
 
 // Rota para editar serviço e cliente juntos
 router.put("/servicos/editar-completo/:id", updateServicoCompleto);
+
+// Rotas para iniciar e pausar serviço
+router.patch("/services/:id/iniciar", iniciarService);
+router.patch("/services/:id/pausar", pausarService);
 
 export default router;

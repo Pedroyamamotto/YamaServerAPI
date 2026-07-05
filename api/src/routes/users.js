@@ -12,6 +12,8 @@ import {
 	logUserActivity,
 	getUserActivities,
 	getTecnicos,
+	getGerentes,
+	updateUser,
 } from "../controllers/Users/index.js";
 
 const router = express.Router();
@@ -376,5 +378,7 @@ router.get("/users/activity/:userId", getUserActivities);
  *         description: Acesso negado
  */
 router.get("/admin/users/tecnicos", requireAdmin, getTecnicos);
+router.get("/admin/users/gerentes", requireAdmin, getGerentes);
+router.patch("/admin/users/:id", requireAdmin, updateUser);
 
 export default router;

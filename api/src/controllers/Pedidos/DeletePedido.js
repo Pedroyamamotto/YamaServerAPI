@@ -1,6 +1,7 @@
-import chalk from "chalk";
+import chalk from "../../chalk-stub.js";
 import { getDb } from "../../db.js";
-import { ObjectId } from "mongodb";
+import mongodb from "mongodb";
+const { ObjectId  } = mongodb;
 
 export const deletePedido = async (req, res) => {
     const { id } = req.params;
