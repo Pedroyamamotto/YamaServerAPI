@@ -1,5 +1,5 @@
 import { getDb } from "../../db.js";
-import sendEmail, { sendPasswordResetCode, sendPasswordResetConfirmation } from "../../../utils/EmailServices.js";
+import { sendPasswordResetCode, sendPasswordResetConfirmation } from "../../../utils/EmailServices.js";
 import bcrypt from "bcrypt";
 
 export const requestPasswordReset = async (req, res) => {

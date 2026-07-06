@@ -33,6 +33,7 @@ import {
     getServicosPorDia,
     getProximasVisitas,
     checkinService,
+    suggestNearestTecnico,
     getServiceContextPhotos,
     getServiceInstalacaoPhotos,
     getServiceAllPhotos,
@@ -566,6 +567,8 @@ router.get("/gerente/services", requireAdminOrGerente, getServicesAdminLista);
  *         description: Serviço não encontrado
  */
 router.patch("/services/:id/admin/atribuir", requireAdmin, adminAtribuirTecnico);
+
+router.get("/services/:id/admin/atribuir/sugestao", requireAdmin, suggestNearestTecnico);
 
 /**
  * @swagger

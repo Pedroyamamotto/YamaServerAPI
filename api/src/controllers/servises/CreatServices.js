@@ -1,6 +1,7 @@
 import yup from "yup";
 import chalk from "../../chalk-stub.js";
 import { getDb } from "../../db.js";
+import { sendPushNotification } from "../../utils/PushNotifications.js";
 
 export const createService = async (req, res) => {
     const servicePayload = Array.isArray(req.body) ? req.body[0] : req.body;
@@ -87,6 +88,15 @@ export const createService = async (req, res) => {
         });
 
         console.log(chalk.green(`Sistema 💻 : Serviço Cadastrado com Sucesso: ${result.insertedId} ✅`));
+
+        // Dispara notificação push se houver técnico atribuído
+        if (tecnico_id) {
+            sendPushNotification(
+                tecnico_id,
+                "Nova Atribuição de Serviço",
+                `Você recebeu o serviço BLING-${numero_pedido}: ${descricao_servico}`
+            ).catch(err => console.error("Erro ao disparar push:", err));
+        }
 
         return res.status(201).json({
             message: "Serviço criado com sucesso!",

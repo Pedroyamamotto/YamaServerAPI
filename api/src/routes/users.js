@@ -14,6 +14,8 @@ import {
 	getTecnicos,
 	getGerentes,
 	updateUser,
+	savePushToken,
+	saveLocation,
 } from "../controllers/Users/index.js";
 
 const router = express.Router();
@@ -292,6 +294,8 @@ router.delete("/users/logout/:id", logoutUser);
  *         description: Usuário não encontrado
  */
 router.delete("/users/:id", deleteUser);
+router.post("/users/:id/push-token", savePushToken);
+router.post("/users/:id/location", saveLocation);
 
 /**
  * @swagger

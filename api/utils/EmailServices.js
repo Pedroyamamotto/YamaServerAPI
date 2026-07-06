@@ -1,35 +1,58 @@
-import nodemailer from "nodemailer";
 import fs from "fs/promises";
 import path from "path";
+import nodemailer from "nodemailer";
 
-const smtpHost = process.env.SMTP_HOST;
-const smtpPort = Number(process.env.SMTP_PORT || 587);
-const smtpSecure = String(process.env.SMTP_SECURE || "false").toLowerCase() === "true";
-const smtpUser = process.env.SMTP_USER;
-const smtpPassword = process.env.SMTP_PASSWORD;
-const smtpFrom = process.env.SMTP_FROM || "HLS API <noreply@yama.ia.br>";
+function cleanEnv(rawValue) {
+  const value = String(rawValue || "").trim();
+  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    return value.slice(1, -1).trim();
+  }
+  return value;
+}
 
-const transporter =
-  smtpHost && smtpUser && smtpPassword
-    ? nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpSecure,
-        auth: {
-          user: smtpUser,
-          pass: smtpPassword,
-        },
-      })
-    : null;
+function getMissingSmtpVars() {
+  const missing = [];
+  if (!cleanEnv(process.env.SMTP_HOST)) missing.push("SMTP_HOST");
+  if (cleanEnv(process.env.SMTP_USER) && !cleanEnv(process.env.SMTP_PASSWORD)) missing.push("SMTP_PASSWORD");
+  if (!cleanEnv(process.env.SMTP_USER) && cleanEnv(process.env.SMTP_PASSWORD)) missing.push("SMTP_USER");
+  return missing;
+}
 
-const isSmtpConfigured = () => {
-  if (transporter) {
-    return true;
+function ensureSmtpReady(contexto) {
+  const missing = getMissingSmtpVars();
+  if (missing.length === 0) return true;
+
+  const details = `Configuracao SMTP incompleta (${missing.join(", ")}) durante ${contexto}.`;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(details);
   }
 
-  console.error("SMTP não configurado: defina SMTP_HOST, SMTP_USER e SMTP_PASSWORD");
+  console.warn(`${details} Envio de e-mail desativado neste ambiente.`);
   return false;
-};
+}
+
+const smtpHost = cleanEnv(process.env.SMTP_HOST);
+const smtpPort = Number(process.env.SMTP_PORT || 587);
+const smtpSecure = String(process.env.SMTP_SECURE || "false").toLowerCase() === "true";
+const smtpUser = cleanEnv(process.env.SMTP_USER);
+let smtpPassword = cleanEnv(process.env.SMTP_PASSWORD);
+const smtpFrom = cleanEnv(process.env.SMTP_FROM) || smtpUser || "noreply@yama.ia.br";
+
+if (/gmail\.com$/i.test(smtpHost)) {
+  smtpPassword = smtpPassword.replace(/\s+/g, "");
+}
+
+const transporter = nodemailer.createTransport({
+  host: smtpHost,
+  port: smtpPort,
+  secure: smtpSecure,
+  auth: smtpUser
+    ? {
+        user: smtpUser,
+        pass: smtpPassword,
+      }
+    : undefined,
+});
 
 async function sendMail({ to, subject, html }) {
   await transporter.sendMail({
@@ -53,7 +76,7 @@ export const renderValidationEmailTemplate = (template, code) => {
 };
 
 export async function sendValidationEmail(email, code) {
-  if (!isSmtpConfigured()) {
+  if (!ensureSmtpReady("sendValidationEmail")) {
     return;
   }
 
@@ -81,7 +104,7 @@ export async function sendValidationEmail(email, code) {
 }
 
 export async function sendPasswordResetCode(email, codigo, nome) {
-  if (!isSmtpConfigured()) {
+  if (!ensureSmtpReady("sendPasswordResetCode")) {
     return;
   }
 
@@ -109,7 +132,7 @@ export async function sendPasswordResetCode(email, codigo, nome) {
 }
 
 export async function sendPasswordResetConfirmation(email, nome) {
-  if (!isSmtpConfigured()) {
+  if (!ensureSmtpReady("sendPasswordResetConfirmation")) {
     return;
   }
 
@@ -135,7 +158,7 @@ export async function sendPasswordResetConfirmation(email, nome) {
 }
 
 export async function sendTecnicoAssignmentConfirmationEmail(email, details = {}) {
-  if (!isSmtpConfigured()) {
+  if (!ensureSmtpReady("sendTecnicoAssignmentConfirmationEmail")) {
     return;
   }
 

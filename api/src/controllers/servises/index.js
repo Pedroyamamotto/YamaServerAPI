@@ -16,6 +16,7 @@ export { getTecnicoAgenda } from "./GetTecnicoAgenda.js";
 export { getServicosPorDia } from "./GetServicosPorDia.js";
 export { getProximasVisitas } from "./GetProximasVisitas.js";
 export { checkinService } from "./CheckinService.js";
+export { suggestNearestTecnico } from "./SuggestNearestTecnico.js";
 export { 
 	uploadServiceContextPhotos,
 	getServiceContextPhotos,

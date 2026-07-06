@@ -34,6 +34,7 @@ export const getGerentes = async (req, res) => {
                     email: gerente.email || "",
                     telefone: gerente.telefone || gerente.phone || "",
                     tecnicosVinculados: count,
+                    lastLocation: gerente.lastLocation || null,
                 };
             })
         );

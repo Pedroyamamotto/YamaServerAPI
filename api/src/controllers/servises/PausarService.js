@@ -23,28 +23,43 @@ export const pausarService = async (req, res) => {
             return res.status(400).json({ message: "Não é possível pausar um serviço finalizado" });
         }
 
-        // Calcula o tempo trabalhado na sessão atual e adiciona ao tempo total
-        let tempo_trabalhado_ms = existingService.tempo_trabalhado_ms || 0;
-        if (existingService.iniciado_em) {
-            const iniciado = new Date(existingService.iniciado_em);
-            const agora = new Date();
-            tempo_trabalhado_ms += (agora.getTime() - iniciado.getTime());
-        }
+        let updateData = {};
+        if (motivo === "Remarcar o atendimento") {
+            updateData = {
+                status: "aguardando",
+                iniciado_em: null,
+                tempo_trabalhado_ms: 0,
+                quantidade_pausas: 0,
+                pausa_motivo: motivo,
+                pausado_em: null,
+                data_agendada: data_agendada ? new Date(data_agendada) : null,
+                turno_agendado: turno_agendado || null,
+                updated_at: new Date()
+            };
+        } else {
+            // Calcula o tempo trabalhado na sessão atual e adiciona ao tempo total
+            let tempo_trabalhado_ms = existingService.tempo_trabalhado_ms || 0;
+            if (existingService.iniciado_em) {
+                const iniciado = new Date(existingService.iniciado_em);
+                const agora = new Date();
+                tempo_trabalhado_ms += (agora.getTime() - iniciado.getTime());
+            }
 
-        const updateData = {
-            status: "pausado",
-            iniciado_em: null, // zera a data de início da sessão atual
-            tempo_trabalhado_ms,
-            pausa_motivo: motivo,
-            pausado_em: new Date(),
-            quantidade_pausas: (existingService.quantidade_pausas || 0) + 1,
-            updated_at: new Date()
-        };
+            updateData = {
+                status: "pausado",
+                iniciado_em: null, // zera a data de início da sessão atual
+                tempo_trabalhado_ms,
+                pausa_motivo: motivo,
+                pausado_em: new Date(),
+                quantidade_pausas: (existingService.quantidade_pausas || 0) + 1,
+                updated_at: new Date()
+            };
 
-        if (data_agendada) {
-            updateData.data_agendada = new Date(data_agendada);
-            if (turno_agendado) {
-                updateData.turno_agendado = turno_agendado;
+            if (data_agendada) {
+                updateData.data_agendada = new Date(data_agendada);
+                if (turno_agendado) {
+                    updateData.turno_agendado = turno_agendado;
+                }
             }
         }
 

@@ -5,6 +5,7 @@ import mongodb from "mongodb";
 const { ObjectId  } = mongodb;
 
 import { sendTecnicoAssignmentConfirmationEmail } from "../../../utils/EmailServices.js";
+import { sendPushNotification } from "../../utils/PushNotifications.js";
 
 const ASSIGNMENT_WEBHOOK_URL = process.env.ASSIGNMENT_WEBHOOK_URL || "https://yamamotto-dev.app.n8n.cloud/webhook/Conclusao";
 
@@ -419,6 +420,15 @@ export const adminAtribuirTecnico = async (req, res) => {
             automacaoDesativada: !ordemDeServico,
             webhookSent: true,
         });
+
+        // Dispara notificação push para o técnico
+        if (tecnico_id) {
+            sendPushNotification(
+                tecnico_id,
+                "Nova Atribuição de Serviço",
+                `Você recebeu o serviço BLING-${numeroPedido}: ${descricaoInstalacao}`
+            ).catch(err => console.error("Erro ao disparar push:", err));
+        }
 
         return res.status(200).json({
             success: true,

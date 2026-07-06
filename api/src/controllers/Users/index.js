@@ -10,3 +10,5 @@ export * from "./RestPassword.js";
 export * from "./UserActivity.js";
 export * from "./GetGerentes.js";
 export * from "./UpdateUser.js";
+export * from "./SavePushToken.js";
+export * from "./SaveLocation.js";
